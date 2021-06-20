@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "project-with-lots-of-ignored-files"
+version = "1.2.3"
+description = "Some description."
+authors = [
+    "Matthew Cochrane <matthew.cochrane.eng@gmail.com>"
+]
+license = "MIT"
+
+readme = "README.rst"
+
+homepage = "https://python-poetry.org"
+repository = "https://github.com/python-poetry/poetry"
+documentation = "https://python-poetry.org/docs"
+
+keywords = ["packaging", "dependency", "poetry"]
+
+classifiers = [
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Software Development :: Libraries :: Python Modules"
+]
+
+exclude = ["**/node_modules/**/*"]
+
+# Requirements
+[tool.poetry.dependencies]
+python = "~2.7 || ^3.4"

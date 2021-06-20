@@ -3,6 +3,8 @@ import gzip
 import hashlib
 import shutil
 import tarfile
+import time
+import subprocess
 
 from email.parser import Parser
 from pathlib import Path
@@ -178,6 +180,31 @@ def test_find_files_to_add():
             Path("my_package/sub_pkg2/__init__.py"),
             Path("my_package/sub_pkg2/data2/data.json"),
             Path("my_package/sub_pkg3/foo.py"),
+            Path("pyproject.toml"),
+        ]
+    )
+
+def test_find_files_to_add_large():
+    project_path = project("project_with_lots_of_ignored_files")
+    js_path = project_path / "project_with_lots_of_ignored_files" / "js"
+    if not (js_path / "node_modules").exists():
+        subprocess.Popen("npm install".split(" "), cwd=str(js_path)).wait()
+    poetry = Factory().create_poetry(project_path)
+
+    builder = SdistBuilder(poetry)
+    start_time = time.monotonic()
+    result = [f.relative_to_source_root() for f in builder.find_files_to_add()]
+    run_duration = time.monotonic() - start_time
+
+    # Less than 100 milliseconds
+    assert run_duration < 0.1
+
+    assert sorted(result) == sorted(
+        [
+            Path("README.rst"),
+            Path("project_with_lots_of_ignored_files/__init__.py"),
+            Path("project_with_lots_of_ignored_files/js/package-lock.json"),
+            Path("project_with_lots_of_ignored_files/js/package.json"),
             Path("pyproject.toml"),
         ]
     )

@@ -5,6 +5,7 @@
 !/tests/**/*.egg
 /*.egg-info
 /tests/fixtures/**/*.egg-info
+/tests/masonry/builders/fixtures/project_with_lots_of_ignored_files/**/node_modules
 /dist/*
 build
 _build
