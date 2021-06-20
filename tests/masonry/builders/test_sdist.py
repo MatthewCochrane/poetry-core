@@ -184,6 +184,7 @@ def test_find_files_to_add():
         ]
     )
 
+
 def test_find_files_to_add_large():
     project_path = project("project_with_lots_of_ignored_files")
     js_path = project_path / "project_with_lots_of_ignored_files" / "js"
@@ -196,9 +197,6 @@ def test_find_files_to_add_large():
     result = [f.relative_to_source_root() for f in builder.find_files_to_add()]
     run_duration = time.monotonic() - start_time
 
-    # Less than 100 milliseconds
-    assert run_duration < 0.1
-
     assert sorted(result) == sorted(
         [
             Path("README.rst"),
@@ -208,6 +206,9 @@ def test_find_files_to_add_large():
             Path("pyproject.toml"),
         ]
     )
+
+    # Less than 100 milliseconds
+    assert run_duration < 0.3
 
 
 def test_make_pkg_info_multi_constraints_dependency():

@@ -7,6 +7,7 @@ import warnings
 
 from collections import defaultdict
 from contextlib import contextmanager
+from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING
 from typing import Any
@@ -156,6 +157,28 @@ class Builder(object):
 
         return False
 
+    def add_file_and_descendants(self, file, to_add: Set["BuildIncludeFile"]) -> None:
+        """
+        Search files recursively.  Don't follow directories
+        any further if they are excluded.
+        """
+        include_file = BuildIncludeFile(
+            path=file,
+            project_root=self._path,
+            source_root=self._path,
+        )
+
+        if self.is_excluded(
+            include_file.relative_to_source_root()
+        ):
+            return
+
+        if file.is_dir():
+            for child_file in file.glob("*"):
+                self.add_file_and_descendants(child_file, to_add)
+        else:
+            to_add.add(include_file)
+
     def find_files_to_add(self, exclude_build: bool = True) -> Set["BuildIncludeFile"]:
         """
         Finds all files to add to the tarball
@@ -173,18 +196,9 @@ class Builder(object):
                     continue
 
                 if file.is_dir():
-                    if self.format in formats:
-                        for current_file in file.glob("**/*"):
-                            include_file = BuildIncludeFile(
-                                path=current_file,
-                                project_root=self._path,
-                                source_root=self._path,
-                            )
-
-                            if not current_file.is_dir() and not self.is_excluded(
-                                include_file.relative_to_source_root()
-                            ):
-                                to_add.add(include_file)
+                    if not isinstance(include, PackageInclude):
+                        if self.format in formats:
+                            self.add_file_and_descendants(file, to_add)
                     continue
 
                 if (
@@ -374,6 +388,11 @@ class Builder(object):
             shutil.rmtree(name)
 
 
+@lru_cache(maxsize=1000)
+def get_cached_path_resolved(path):
+    return Path(path).resolve()
+
+
 class BuildIncludeFile:
     def __init__(
         self,
@@ -387,8 +406,8 @@ class BuildIncludeFile:
         :param source_root: the root path to resolve to
         """
         self.path = Path(path)
-        self.project_root = Path(project_root).resolve()
-        self.source_root = None if not source_root else Path(source_root).resolve()
+        self.project_root = get_cached_path_resolved(project_root)
+        self.source_root = None if not source_root else get_cached_path_resolved(source_root)
         if not self.path.is_absolute() and self.source_root:
             self.path = self.source_root / self.path
         else:

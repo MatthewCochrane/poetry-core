@@ -20,7 +20,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules"
 ]
 
-exclude = ["**/node_modules/**/*"]
+exclude = ["**/node_modules/"]
 
 # Requirements
 [tool.poetry.dependencies]
